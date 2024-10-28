@@ -3,8 +3,8 @@ package handler
 import (
 	"context"
 	"github.com/gofiber/fiber/v2"
-	"go-embedded-system/src/internal/domain"
-	"go-embedded-system/src/internal/usecase"
+	"go-embedded-system/app/internal/domain"
+	"go-embedded-system/app/internal/usecase"
 )
 
 type TemperatureHandler struct {
@@ -43,4 +43,23 @@ func (h *TemperatureHandler) GetAllTemperatures(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(data)
+}
+
+func (h *TemperatureHandler) ControlFan(c *fiber.Ctx) error {
+	var fanControl domain.FanControl
+	if err := c.BodyParser(&fanControl); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "cannot parse JSON",
+		})
+	}
+
+	if fanControl.State == "on" {
+		return c.JSON(fiber.Map{"message": "Fan turned ON"})
+	} else if fanControl.State == "off" {
+		return c.JSON(fiber.Map{"message": "Fan turned OFF"})
+	} else {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid state. Use 'on' or 'off'.",
+		})
+	}
 }
