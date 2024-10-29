@@ -1,27 +1,34 @@
+# Use a imagem Python slim como base
 FROM python:3.12.7-slim
 
+# Define o diretório de trabalho
 WORKDIR /app
 
-# Install system dependencies
+# Variável de ambiente para evitar buffering
+ENV PYTHONUNBUFFERED 1
+
+# Instala dependências de sistema
 RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     libc-dev \
     libffi-dev \
     build-essential \
+    curl \
     && apt-get clean
 
-# Install poetry
-RUN pip install poetry
+# Instala uma versão específica do Poetry
+RUN pip install poetry==1.5.1
 
-
-# Copy the current directory contents into the container at /app
+# Copia o conteúdo do diretório atual para o contêiner em /app
 COPY . /app
 
+# Configura o Poetry para instalar no ambiente global e instala as dependências do projeto
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
-# PORT
+# Expõe a porta 8501 para o Streamlit
 EXPOSE 8501
 
-CMD ["poetry", "run",  "streamlit", "run", "app/dashboard/embedded_system.py"]
+# Comando para iniciar o Streamlit
+CMD ["poetry", "run", "streamlit", "run", "app/dashboard/embedded_system.py"]
