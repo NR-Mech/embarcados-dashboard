@@ -1,34 +1,21 @@
-# Use a imagem Python slim como base
-FROM python:3.12.7-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-# Define o diretório de trabalho
 WORKDIR /app
 
-# Variável de ambiente para evitar buffering
-ENV PYTHONUNBUFFERED 1
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
-# Instala dependências de sistema
-RUN apt-get update && apt-get install -y \
-    gcc \
-    python3-dev \
-    libc-dev \
-    libffi-dev \
-    build-essential \
-    curl \
-    && apt-get clean
+RUN --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
 
-# Instala uma versão específica do Poetry
-RUN pip install poetry==1.5.1
+ADD . /app
+RUN uv sync --frozen --no-dev
 
-# Copia o conteúdo do diretório atual para o contêiner em /app
-COPY . /app
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Configura o Poetry para instalar no ambiente global e instala as dependências do projeto
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+ENTRYPOINT []
 
-# Expõe a porta 8501 para o Streamlit
 EXPOSE 8501
 
-# Comando para iniciar o Streamlit
-CMD ["poetry", "run", "streamlit", "run", "app/dashboard/embedded_system.py"]
+CMD ["streamlit", "run", "app/dashboard/embedded_system.py"]
