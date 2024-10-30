@@ -1,23 +1,12 @@
 FROM python:3.12.7-slim
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Alterar o diretório de trabalho para o diretório `app`
 WORKDIR /app
 
-# Instalar dependências
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+COPY requirements.txt .
 
-# Copiando o projeto para a imagem
-ADD . /app
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Sincronizando o projeto
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
-
-ENTRYPOINT []
+COPY . .
 
 EXPOSE 8501
 
